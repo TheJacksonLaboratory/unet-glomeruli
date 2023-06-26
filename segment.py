@@ -1,6 +1,9 @@
 import os
 import logging
 
+import functools
+import itertools
+
 import torch
 
 import zarr
@@ -10,6 +13,30 @@ import numpy as np
 
 
 from models import UNet
+
+
+def parse_filenames_list(filenames_list, input_format):
+    if (isinstance(filenames_list, str)
+      and not (filenames_list.lower().endswith(input_format.lower())
+             or filenames_list.lower().endswith(".txt"))):
+        return []
+
+    if (isinstance(filenames_list, str)
+      and filenames_list.lower().endswith(input_format.lower())):
+        return [filenames_list]
+
+    if (isinstance(filenames_list, str)
+      and filenames_list.lower().endswith(".txt")):
+        with open(filenames_list, "r") as fp:
+            filenames_list = [fn.strip("\n ") for fn in  fp.readlines()]
+
+    if isinstance(filenames_list, list):
+        filenames_list = functools.reduce(lambda l1, l2: l1 + l2,
+                                          map(parse_filenames_list,
+                                              filenames_list,
+                                              itertools.repeat(input_format)),
+                                          [])
+    return filenames_list
 
 
 def predict_image(input_fn, output_dir, predict_chunk_func, threshold=0.5, 
@@ -109,6 +136,8 @@ if __name__ == "__main__":
             pred = pred[0, 0].cpu().sigmoid().numpy()
 
         return pred
+
+    args.inputs = parse_filenames_list(args.inputs, ".zarr")
 
     for in_fn in args.inputs:
         output_fn = predict_image(in_fn, args.output_dir, predict_chunk,
