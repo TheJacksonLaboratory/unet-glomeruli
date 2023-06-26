@@ -64,6 +64,7 @@ def predict_image(input_fn, output_dir, predict_chunk_func, threshold=0.5,
                            depth=(0, 16, 16),
                            dtype=np.float32,
                            drop_axis=(0,),
+                           boundary='none',
                            meta=np.empty((0,), dtype=np.float32))
 
     output_filename = os.path.join(output_dir, basename)
