@@ -142,8 +142,8 @@ if __name__ == "__main__":
         return pred
 
     args.inputs = parse_filenames_list(args.inputs, ".zarr")
-    if len(args.inputs):
-        args.inputs = [os.path.join(fn, args.image_group)
+    if len(args.img_group):
+        args.inputs = [os.path.join(fn, args.img_group)
                        for fn in args.inputs]
 
     for in_fn in args.inputs:
