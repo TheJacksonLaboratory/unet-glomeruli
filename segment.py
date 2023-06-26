@@ -89,6 +89,10 @@ if __name__ == "__main__":
                         required=True,
                         help="Input images in zarr format in TCZYX axes "
                              "ordering (usual bioformats2raw axes ordering)")
+    parser.add_argument("-ig", "--image-group", dest="img_group", type=str,
+                        default="",
+                        help="Group within the zarr file that contains the "
+                             "image data")
     parser.add_argument("-o", "--output-dir", dest="output_dir", type=str,
                         default="./",
                         help="Output directory where to save the predictions")
@@ -138,6 +142,9 @@ if __name__ == "__main__":
         return pred
 
     args.inputs = parse_filenames_list(args.inputs, ".zarr")
+    if len(args.inputs):
+        args.inputs = [os.path.join(fn, args.image_group)
+                       for fn in args.inputs]
 
     for in_fn in args.inputs:
         output_fn = predict_image(in_fn, args.output_dir, predict_chunk,
