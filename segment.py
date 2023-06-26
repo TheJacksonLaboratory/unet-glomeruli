@@ -25,24 +25,33 @@ def predict_image(input_fn, output_dir, predict_chunk_func, threshold=0.5,
     if z.ndim > 3:
         z = z[0, :, 0, ...]
 
+    pad_H = (chunk_size - z.shape[-2]) % chunk_size
+    pad_W = (chunk_size - z.shape[-1]) % chunk_size
+
+    if pad_H or pad_W:
+        z = da.pad(z, ((0, 0), (0, pad_H), (0, pad_W)))
+
     z = da.rechunk(z, (3, chunk_size, chunk_size))
 
     z_pred = z.map_overlap(predict_chunk_func,
-                           depth=(1, 16, 16),
+                           depth=(0, 16, 16),
                            dtype=np.float32,
                            drop_axis=(0,),
                            meta=np.empty((0,), dtype=np.float32))
 
+    output_filename = os.path.join(output_dir, basename)
     # Save the prediction probabilities when specified by the user
     if save_probs:
-        z_pred.to_zarr(os.path.join(output_dir, basename + ".zarr"),
-                       component="probs/" + component,
-                       compressor=zarr.Blosc())
+        z_pred.to_zarr(output_filename, component="probs/" + component,
+                       compressor=zarr.Blosc(),
+                       overwrite=True)
 
     z_class = z_pred > threshold
-    z_class.to_zarr(os.path.join(output_dir, basename + ".zarr"),
-                    component="class/" + component,
-                    compressor=zarr.Blosc())
+    z_class.to_zarr(output_filename, component="class/" + component,
+                    compressor=zarr.Blosc(),
+                    overwrite=True)
+
+    return output_filename
 
 
 if __name__ == "__main__":
