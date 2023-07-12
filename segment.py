@@ -21,14 +21,14 @@ def parse_filenames_list(filenames_list, input_format):
              or filenames_list.lower().endswith(".txt"))):
         return []
 
-    if (isinstance(filenames_list, str)
-      and filenames_list.lower().endswith(input_format.lower())):
-        return [filenames_list]
-
-    if (isinstance(filenames_list, str)
-      and filenames_list.lower().endswith(".txt")):
-        with open(filenames_list, "r") as fp:
-            filenames_list = [fn.strip("\n ") for fn in  fp.readlines()]
+    if isinstance(filenames_list, str):
+        if filenames_list.lower().endswith(input_format.lower()):
+            return [filenames_list]
+        elif filenames_list.lower().endswith(".txt"):
+            with open(filenames_list, "r") as fp:
+                filenames_list = [fn.strip("\n ") for fn in  fp.readlines()]
+        elif os.path.isdir(filenames_list):
+            filenames_list = os.listdir(filenames_list)
 
     if isinstance(filenames_list, list):
         filenames_list = functools.reduce(lambda l1, l2: l1 + l2,
