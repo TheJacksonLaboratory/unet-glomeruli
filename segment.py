@@ -18,7 +18,8 @@ from models import UNet
 def parse_filenames_list(filenames_list, input_format):
     if (isinstance(filenames_list, str)
       and not (filenames_list.lower().endswith(input_format.lower())
-             or filenames_list.lower().endswith(".txt"))):
+             or filenames_list.lower().endswith(".txt")
+             or os.path.isdir(filenames_list))):
         return []
 
     if isinstance(filenames_list, str):
@@ -28,7 +29,9 @@ def parse_filenames_list(filenames_list, input_format):
             with open(filenames_list, "r") as fp:
                 filenames_list = [fn.strip("\n ") for fn in  fp.readlines()]
         elif os.path.isdir(filenames_list):
-            filenames_list = os.listdir(filenames_list)
+            filenames_list = list(
+                map(lambda fn: os.path.join(filenames_list, fn),
+                    os.listdir(filenames_list)))
 
     if isinstance(filenames_list, list):
         filenames_list = functools.reduce(lambda l1, l2: l1 + l2,
@@ -149,6 +152,7 @@ if __name__ == "__main__":
 
     for in_fn in args.inputs:
         output_fn = predict_image(in_fn, args.output_dir, predict_chunk,
+                                  threshold=args.threshold,
                                   chunk_size=args.chunk_size,
                                   save_probs=args.save_probs)
         logger.info(f"Segmented {in_fn}, output was saved to {output_fn}")
